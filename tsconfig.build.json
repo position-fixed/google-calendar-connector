@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "CommonJS",
+    "outDir": "dist",
+    "noImplicitAny": false,
+    "removeComments": true,
+    "esModuleInterop": true,
+    "declaration": true,
+    "skipLibCheck": true,
+    "moduleResolution": "node"
+  },
+  "include": [
+    "src/gCalendarConnector.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
