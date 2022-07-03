@@ -1,6 +1,7 @@
 {
   "name": "@smartmirror.one/google-calendar-connector",
-  "main": "dist/gcalendar-connector.js",
+  "main": "dist/gCalendarConnector.js",
+  "types": "dist/gCalendarConnector.d.ts",
   "scripts": {
     "start": "npm run dev",
     "dev": "ts-node-dev src/example.ts",
