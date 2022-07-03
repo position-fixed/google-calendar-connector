@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const googleapis_1 = require("googleapis");
 class gCalendarConnector {
@@ -52,12 +43,14 @@ class gCalendarConnector {
             const handleCalendarResponse = (error, response) => {
                 if (error)
                     reject(error);
-                const events = response.data.items || [];
-                const mappedEvents = events.map(event => ({
-                    calendar: event.organizer.displayName || '',
-                    end: event.end.dateTime || event.end.date,
+                const events = response
+                    ? response.data.items
+                    : [];
+                const mappedEvents = events.map((event) => ({
+                    calendar: String(event.organizer.displayName),
+                    end: String(event.end.dateTime || event.end.date),
                     fullDay: !event.start.dateTime,
-                    start: event.start.dateTime || event.start.date,
+                    start: String(event.start.dateTime || event.start.date),
                     summary: event.summary,
                 }));
                 resolve(mappedEvents);
@@ -79,19 +72,17 @@ class gCalendarConnector {
                 singleEvents: true,
                 timeMax: tomorrow.toISOString(),
                 timeMin: now.toISOString(),
-            }, handleCalendarResponse);
+            }, (err, res) => handleCalendarResponse(err, res));
         });
     }
-    getCalendarItems({ token, maxResults, calendarIds }) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const promisePerCalendar = calendarIds.map(calendarId => {
-                return this.getItemsForCalendar({ calendarId, maxResults, token });
-            });
-            const calendarResults = yield Promise.all(promisePerCalendar);
-            return calendarResults
-                .reduce((acc, val) => acc.concat(val), [])
-                .sort(this.sortByDate);
+    async getCalendarItems({ token, maxResults, calendarIds }) {
+        const promisePerCalendar = calendarIds.map(calendarId => {
+            return this.getItemsForCalendar({ calendarId, maxResults, token });
         });
+        const calendarResults = await Promise.all(promisePerCalendar);
+        return calendarResults
+            .reduce((acc, val) => acc.concat(val), [])
+            .sort(this.sortByDate);
     }
 }
 exports.default = gCalendarConnector;

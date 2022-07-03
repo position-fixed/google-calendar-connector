@@ -26,6 +26,15 @@ type CalendarEvent = {
   summary: string;
 }
 
+type CallbackHandler = (
+  error: Error | null,
+  response?: { data: CalendarV3.Schema$Events } | null,
+) => void;
+
+type Required<T> = {
+  [P in keyof T]-?: T[P];
+};
+
 export default class gCalendarConnector {
   clientId: string;
   clientSecret: string;
@@ -81,18 +90,17 @@ export default class gCalendarConnector {
   }: GetItemsProps): Promise<CalendarEvent[]> {
     return new Promise((resolve, reject) => {
       /* Promisified Callback for Google Calendar's list */
-      const handleCalendarResponse = (
-        error: Error,
-        response: { data: CalendarV3.Schema$Events },
-      ) => {
+      const handleCalendarResponse: CallbackHandler = (error, response) => {
         if (error) reject(error);
 
-        const events: CalendarV3.Schema$Event[] = response.data.items || [];
-        const mappedEvents: CalendarEvent[] = events.map(event => ({
-          calendar: event.organizer.displayName || '',
-          end: event.end.dateTime || event.end.date,
+        const events = response
+          ? response.data.items as Required<CalendarV3.Schema$Event>[]
+          : [];
+        const mappedEvents: CalendarEvent[] = events.map((event) => ({
+          calendar: String(event.organizer.displayName),
+          end: String(event.end.dateTime || event.end.date),
           fullDay: !event.start.dateTime,
-          start: event.start.dateTime || event.start.date,
+          start: String(event.start.dateTime || event.start.date),
           summary: event.summary,
         }));
 
@@ -118,7 +126,7 @@ export default class gCalendarConnector {
         singleEvents: true,
         timeMax: tomorrow.toISOString(),
         timeMin: now.toISOString(),
-      }, handleCalendarResponse);
+      }, (err, res) => handleCalendarResponse(err, res));
     });
   }
 
